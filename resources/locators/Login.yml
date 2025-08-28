@@ -1,0 +1,7 @@
+Login:
+  CAMPO_EMAIL: xpath=//input[@data-testid="email"]
+  CAMPO_SENHA: xpath=//input[@data-testid="senha"]
+  BOTAO_ENTRAR: xpath=//button[@data-testid="entrar"]
+  LINK_CADASTRO: xpath=//a[@data-testid="cadastrar"]
+  TITULO_LOGIN: xpath=//h1[text()="Login"]
+  MESSAGE_ALERT: css=div.alert-dismissible

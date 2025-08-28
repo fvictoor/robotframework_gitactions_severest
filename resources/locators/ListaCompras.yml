@@ -1,0 +1,10 @@
+ListaCompras:
+  TITLE_LISTA_COMPRAS: xpath=//h1[text()="Lista de Compras"]
+  LISTA_COMPRAS_VAZIA: css=p[data-testid='shopping-cart-empty-message']
+  BOTAO_PAGINA_INICIAL: css=button[data-testid='paginaInicial']
+  BOTAO_LIMPAR_LISTA: css=button[data-testid='limparLista']
+  BOTAO_ADC_CARRINHO: css=button[data-testid='adicionar carrinho']
+  BOTAO_INCREMNETAR_QTA: css=button[data-testid='product-increase-quantity']
+  BOTAO_DECREMENTAR_QTA: css=button[data-testid='product-decrease-quantity']
+  ADC_PRODUTO_LISTA: xpath=//h5[normalize-space()='{text}']/following::button[@data-testid="adicionarNaLista"]
+  PRODUTO_LISTA: xpath=//div[@data-testid='shopping-cart-product-name'][text()='{text}']

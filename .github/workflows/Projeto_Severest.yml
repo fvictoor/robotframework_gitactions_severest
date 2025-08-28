@@ -1,0 +1,104 @@
+name: Projeto de Testes Automatizados - Severest
+
+on:
+  workflow_dispatch:
+    inputs:
+      processes:
+        description: "Quantidade de processos para o Pabot"
+        required: true
+        default: "2"
+      titulo_execucao:
+        description: "Título do relatório de execução"
+        required: true
+        default: "🚀 Relatório de Testes Automatizados - Severest"
+      tags_dashboard:
+        description: "Tags para o dashboard (separadas por vírgula)"
+        required: true
+        default: "frontend,api,positivo,negativo"
+      email_destinatarios:
+        description: "E-mails dos destinatários (separados por vírgula)"
+        required: false
+        default: "fvictoor.porto@gmail.com,fvictoor@outlook.com"
+
+jobs:
+  run-tests:
+    runs-on: ubuntu-latest
+    
+    env:
+      EMAIL_REMETENTE: ${{ secrets.EMAIL_REMETENTE }}
+      EMAIL_SENHA: ${{ secrets.EMAIL_SENHA }}
+      SMTP_SERVIDOR: ${{ secrets.SMTP_SERVIDOR }}
+      SMTP_PORTA: ${{ secrets.SMTP_PORTA }}
+      EMAIL_DESTINATARIOS: ${{ github.event.inputs.email_destinatarios || secrets.EMAIL_DESTINATARIOS }}
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      # Python estável
+      - name: Instalar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      # Node.js instável
+      - name: Instalar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "node"
+
+      - name: Instalar dependências Python
+        run: |
+          pip install --upgrade pip
+          pip install robotframework robotframework-browser robotframework-faker robotframework-jsonlibrary robotframework-pabot robotframework-requests pandas Jinja2 python-dotenv requests
+
+      - name: Install Playwright Dependencies
+        run: npx playwright install-deps
+
+      - name: Inicializar Browser Library
+        run: rfbrowser init
+
+      - name: Executar Testes
+        continue-on-error: true
+        run: |
+          pabot --testlevelsplit --processes ${{ github.event.inputs.processes }} --outputdir ./log ./tests/
+
+      - name: Executar Retestes
+        if: always()
+        run: |
+          if grep -E -q '<stat .* fail="[1-9][0-9]*"' ./log/output.xml; then
+            echo "Falhas encontradas. Rodando retestes..."
+            pabot --testlevelsplit --processes ${{ github.event.inputs.processes }} --outputdir ./log --rerunfailed ./log/output.xml ./tests/
+          else
+            echo "Nenhuma falha encontrada. Pulando retestes."
+          fi
+
+      - name: Enviar relatório Webhook
+        if: always()
+        continue-on-error: true
+        run: |
+          python ./libs/report_robotframework_webhook/report/report_webhook.py ./log/output.xml ./log/rerun/output.xml --titulo "${{ github.event.inputs.titulo_execucao }}"
+
+      - name: Gerar dashboard
+        if: always()
+        continue-on-error: true
+        run: |
+          python ./libs/robot_report_dashboard/robot_report_dashboard/main.py ./log/output.xml ./log/rerun/output.xml --tags "${{ github.event.inputs.tags_dashboard }}" --output_dir ./log --filename report.html
+
+      - name: Enviar dashboard via e-mail
+        if: always()
+        continue-on-error: true
+        run: |
+          echo "Relatório encontrado. Enviando e-mail..."
+          python ./libs/robot_report_email/robot_report_email/disparador_email.py ./log/report.html
+      
+      - name: Gerar Timestamp para o Artefato
+        if: always()
+        run: echo "TIMESTAMP=$(date +'%Y-%m-%d_%H-%M-%S')" >> $GITHUB_ENV
+
+      - name: Fazer upload dos logs de execução
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: logs-execucao-${{ env.TIMESTAMP }}
+          path: ./log
