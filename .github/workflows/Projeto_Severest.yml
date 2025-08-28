@@ -30,6 +30,7 @@ jobs:
       SMTP_SERVIDOR: ${{ secrets.SMTP_SERVIDOR }}
       SMTP_PORTA: ${{ secrets.SMTP_PORTA }}
       EMAIL_DESTINATARIOS: ${{ github.event.inputs.email_destinatarios || secrets.EMAIL_DESTINATARIOS }}
+      WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
 
     steps:
       - name: Checkout do código
@@ -50,7 +51,7 @@ jobs:
       - name: Instalar dependências Python
         run: |
           pip install --upgrade pip
-          pip install robotframework robotframework-browser robotframework-faker robotframework-jsonlibrary robotframework-pabot robotframework-requests pandas Jinja2 python-dotenv requests
+          pip install -r requirements.txt
 
       - name: Install Playwright Dependencies
         run: npx playwright install-deps
@@ -68,7 +69,7 @@ jobs:
         run: |
           if grep -E -q '<stat .* fail="[1-9][0-9]*"' ./log/output.xml; then
             echo "Falhas encontradas. Rodando retestes..."
-            pabot --testlevelsplit --processes ${{ github.event.inputs.processes }} --outputdir ./log --rerunfailed ./log/output.xml ./tests/
+            pabot --testlevelsplit --processes ${{ github.event.inputs.processes }} --outputdir ./log/rerun --rerunfailed ./log/output.xml ./tests/
           else
             echo "Nenhuma falha encontrada. Pulando retestes."
           fi

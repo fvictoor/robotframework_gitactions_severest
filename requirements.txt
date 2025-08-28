@@ -8,3 +8,4 @@ requests
 pandas
 Jinja2
 python-dotenv
+PyYAML
