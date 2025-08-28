@@ -10,7 +10,7 @@ on:
       titulo_execucao:
         description: "Título do relatório de execução"
         required: true
-        default: "🚀 Relatório de Testes Automatizados - Severest"
+        default: "🚀 Relatório de Testes Automatizados - Robot Framework"
       tags_dashboard:
         description: "Tags para o dashboard (separadas por vírgula)"
         required: true
